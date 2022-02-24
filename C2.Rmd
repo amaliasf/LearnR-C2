@@ -572,22 +572,22 @@ Lakukan pembersihan data menggunakan _function_ `tm_map` berdasarakan langkah-la
 
 ```{r lower, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "sms"}
 # case-folding: mengubah semua text menjadi lowercase
-sms_corpus_lower <-
+# sms_corpus_lower <-
 
 # remove numbers: menghapus angka
-sms_corpus_numb <-
+# sms_corpus_numb <-
 
 # remove stopwords: menghapus kata umum yang kurang bermakna
-sms_corpus_stop <-
+# sms_corpus_stop <-
   
 # remove punctuation: menghapus tanda baca
-sms_corpus_punc <-
+# sms_corpus_punc <-
 
 # stemming: mengembalikan kata dasar
-sms_corpus_stem <-
+# sms_corpus_stem <-
 
 # remove white space: menghapus spasi berlebih
-sms_corpus_clean <-
+# sms_corpus_clean <-
   
 # cek content ke-9 sebelum dan setelah cleaning
 # sms_corpus[[9]]$content
