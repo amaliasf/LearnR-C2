@@ -11,7 +11,7 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr) # user interface for coding exercise
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-options(tutorial.exercise.timelimit = 60)
+options(tutorial.exercise.timelimit = 90)
 # options(scipen = 99)
 # Sys.setlocale('LC_ALL','C')
 
@@ -358,10 +358,12 @@ sms_raw <- read.csv("data_input/spam.csv",
                     stringsAsFactors = FALSE,
                     encoding = "UTF-8")
 # wrangling
-sms <- sms_raw %>% 
-  mutate(v1 = as.factor(v1)) %>% 
-  select(- c(X , X.1 , X.2)) %>% 
-  rename(label = v1, text = v2) 
+#sms <- sms_raw %>% 
+#  mutate(v1 = as.factor(v1)) %>% 
+#  select(- c(X , X.1 , X.2)) %>% 
+#  rename(label = v1, text = v2) 
+
+sms <- readRDS("rds-files/sms.RDS")
 
 # ubah format menjadi corpus
 sms_corpus <- VCorpus(VectorSource(sms$text))
@@ -390,6 +392,8 @@ sms_dtm <- DocumentTermMatrix(sms_corpus_clean)
 ```
 
 
+
+
 ```{r sms-2, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # read doc term matrix
 # setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
@@ -397,12 +401,14 @@ sms_raw <- read.csv("data_input/spam.csv",
                     stringsAsFactors = FALSE,
                     encoding = "UTF-8")
 # wrangling
-sms <- sms_raw %>% 
-  mutate(v1 = as.factor(v1)) %>% 
-  select(- c(X , X.1 , X.2)) %>% 
-  rename(label = v1, text = v2) 
+#sms <- sms_raw %>% 
+#  mutate(v1 = as.factor(v1)) %>% 
+#  select(- c(X , X.1 , X.2)) %>% 
+#  rename(label = v1, text = v2) 
 
-sms_dtm <- readRDS("sms_dtm.RDS")
+sms <- readRDS("rds-files/sms.RDS")
+
+sms_dtm <- readRDS("rds-files/sms_dtm.RDS")
 
 # melakukan splitting berdasarkan sms_dtm
 RNGkind(sample.kind = "Rounding")
@@ -448,15 +454,11 @@ model_spam <- naiveBayes(x = sms_train_bn, # variabel prediktor
 sms_raw <- read.csv("data_input/spam.csv",
                     stringsAsFactors = FALSE,
                     encoding = "UTF-8")
-# wrangling
-sms <- sms_raw %>% 
-  mutate(v1 = as.factor(v1)) %>% 
-  select(- c(X , X.1 , X.2)) %>% 
-  rename(label = v1, text = v2) 
 
-model_spam <- readRDS("model_spam.RDS")
-sms_test_bn <- readRDS("sms_test_bn.RDS")
-label_test <- readRDS("label_test.RDS")
+sms <- readRDS("rds-files/sms.RDS")
+model_spam <- readRDS("rds-files/model_spam.RDS")
+sms_test_bn <- readRDS("rds-files/sms_test_bn.RDS")
+label_test <- readRDS("rds-files/label_test.RDS")
 
 # melakukan prediksi pada data test
 sms_predClass <- predict(object= model_spam, newdata = sms_test_bn, type = "class") 
@@ -501,6 +503,8 @@ Simpan dataframe yang sudah dirapikan dengan nama `sms`.
 ```{r wrangling, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "sms"}
 # data wrangling
 
+
+head(sms)  
 ```
 
 <div id="wrangling-hint">
@@ -572,26 +576,26 @@ Lakukan pembersihan data menggunakan _function_ `tm_map` berdasarakan langkah-la
 
 ```{r lower, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "sms"}
 # case-folding: mengubah semua text menjadi lowercase
-# sms_corpus_lower <-
+sms_corpus_lower <-
 
 # remove numbers: menghapus angka
-# sms_corpus_numb <-
+sms_corpus_numb <-
 
 # remove stopwords: menghapus kata umum yang kurang bermakna
-# sms_corpus_stop <-
+sms_corpus_stop <-
   
 # remove punctuation: menghapus tanda baca
-# sms_corpus_punc <-
+sms_corpus_punc <-
 
 # stemming: mengembalikan kata dasar
-# sms_corpus_stem <-
+sms_corpus_stem <-
 
 # remove white space: menghapus spasi berlebih
-# sms_corpus_clean <-
+sms_corpus_clean <-
   
 # cek content ke-9 sebelum dan setelah cleaning
 # sms_corpus[[9]]$content
-# sms_corpus_clean[[9]]$content
+sms_corpus_clean[[9]]$content
 ```
 
 ### Document-Term Matrix (DTM)
@@ -644,13 +648,6 @@ dim(sms_train)
 dim(sms_test)
 ```
 
-Output dimensi yang diharapkan:
-```{r echo = FALSE}
-# cek dimensi sms train dan sms test
-dim(sms_train)
-dim(sms_test)
-```
-
 Kemudian siapkan juga label untuk variabel target dari masing-masing data train dan data test. Simpan dengan nama variabel `label_train` dan `label_test`.
 
 ```{r label, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "sms-2"}
@@ -666,15 +663,17 @@ Kemudian siapkan juga label untuk variabel target dari masing-masing data train 
 
 Langkah selanjutnya adalah menghapus kata yang jarang muncul. Tahap ini dilakukan untuk mengurangi _noise_ dan menyeleksi _features_ / prediktor berdasarkan kata-kata yang sering muncul saja. 
 
-Gunakan function `findFreqTerms()` untuk mengambil kata yang sering muncul pada `sms_train` minimal sebanyak 20 kali. Lalu simpan dengan nama variabel `sms_freq`. Kemudian lakukan subsetting `sms_train` hanya untuk kata-kata yang muncul di `sms_freq`
+Gunakan function `findFreqTerms()` untuk mengambil kata yang sering muncul pada `sms_train` minimal sebanyak 20 kali. Lalu simpan dengan nama variabel `sms_freq`. Kemudian lakukan subsetting `sms_train` hanya untuk kata-kata yang muncul di `sms_train`
 
 ```{r freq, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "sms-2"}
-# mengambil kata yang sering muncul
-sms_freq <- 
-# subsetting sms_train terhadap kata `sms_freq` 
-sms_train <- 
-# inspect sms_train
-inspect(sms_train)
+## mengambil kata yang sering muncul
+# sms_freq <- 
+
+## subsetting sms_train terhadap kata `sms_freq` 
+# sms_train <- 
+
+## inspeksi   
+# inspect(sms_train)
 ```
 
 
@@ -699,11 +698,12 @@ bernoulli_conv <- function(x){
 Selanjutnya, terapkan `bernoulli_conv` ke `sms_train` dan `sms_test`. Simpan dengan nama `sms_train_bn`. Kemudian lakukan subsetting untuk mengecek hasil aplikasi bernoulli converter pada sms_train_bn
 
 ```{r bernoull, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "sms-2"}
+
 # aplikasi bernoulli_conv pada sms_train
-sms_train_bn <- apply(X = ..., MARGIN = ..., FUN = ...)
+# sms_train_bn <- apply(X = ..., MARGIN = ..., FUN = ...)
 
 # aplikasi bernoulli_conv pada sms_test
-sms_test_bn <- apply(X = ..., MARGIN = ..., FUN = ...)
+# sms_test_bn <- apply(X = ..., MARGIN = ..., FUN = ...)
 
 # subset baris dal kolom
 sms_train_bn[6:10, 6:10]
@@ -825,188 +825,210 @@ Entropy adalah ukuran ketidakteraturan (measure of disorder) dari sebuah kelompo
 
 Kelompok data yang diharapkan setelah dilakukan percabangan adalah kelompok yang memiliki entropy rendah. Kemudian untuk predictor yang dipilih adalah predictor yang menghasilkan penurunan entropy paling besar, karena berarti membuat data setelah pemisahan semakin homogen. Perubahan entropy inilah yang disebut Information Gain.
 
-### Study Case: Diabetes
+### Study Case: Heart Disease
 
-**Business Question:** Sebagai seorang konsultan kesehatan di sebuah rumah sakit, kita diminta untuk membuat _rules_ dari hasil tes diagnosis dan riwayat penyakit diabetes dari 768 pasien. Dalam kasus ini, kita akan mengaplikasikan Decision Tree agar rules dapat disajikan dalam bentuk visualisasi yang mudah diinterpretasi.
+**Business Question:** Sebagai seorang konsultan kesehatan di sebuah rumah sakit, kita diminta untuk membuat _rules_ dari hasil tes diagnosis dan riwayat kesehatan jantung 303 pasien. Dalam kasus ini, kita akan mengaplikasikan Decision Tree untuk melakukan klasifikasi pasien yang terkena serangan jantung dan tida. Decision Tree juga merupakan metode yang tepat agar rules dapat disajikan dalam bentuk visualisasi dan mudah diinterpretasi. 
 
-- kelas positif: diabetes (pos)
-- kelas negatif: sehat (neg)
 
 ### Read Data
 
-Pembacaan data dilakukan, kemudian disimpan dengan variabel `diab`
+Pembacaan data dilakukan, kemudian disimpan dengan variabel `heart`
 
-```{r data_diab, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+```{r data_heart, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # chunk untuk menyimpan semua variabel yang digunakan pada party
 # baca data
-#setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
-diab <- read.csv("data_input/diabetes.csv", stringsAsFactors = T)
+# setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
+heart<-read.csv("data_input/heart.csv")
 
-#splitting data
-RNGkind(sample.kind = "Rounding")
-set.seed(100)
-intrain <- initial_split(data = diab, prop = 0.8, strata = "diabetes")
-diab_train <- training(intrain) 
-diab_test <- testing(intrain)
+heart <- heart %>% 
+  mutate_if(is.integer, as.factor) %>% 
+  mutate(sex = factor(sex, levels = c(0,1), labels = c("Female","Male")),
+         fbs =factor(fbs, levels = c(0,1), labels = c("False","True")),
+         exang = factor(exang, levels = c(0,1), labels = c("No","Yes")),
+         target = factor(target, levels = c(0,1), 
+                        labels = c("Health","Not Health")))
 
-# downsampling
-diab_train_down <- downSample(x = diab_train[, -9], # menghilangkan kolom diabetes yang berada pada urutan ke 9
-                              y = diab_train$diabetes,
-                              yname = "diabetes") # nama kolom target variabel
+# splitting train dan test
+set.seed(250)
+intrain <- sample(nrow(heart),nrow(heart)*0.8)
+heart_train <- heart[intrain, ]
+heart_test <- heart[-intrain, ]
 
-# melakukan training model
-diabetes_tree <- ctree(formula = diabetes~., data = diab_train_down)
+# upsampling
+set.seed(250)
+heart_train_up <- upSample(x = heart_train[, -14],
+                              y = heart_train$target,
+                              yname = "target")
 
-# prediksi kelas di data test
-diab_pred_class <- predict(object = diabetes_tree, newdata = diab_test, type = "response")
+# membuat model tree
+heart_tree <- ctree(target~., heart_train_up)
 
-# confusion matrix data test
-confusionMatrix(data = as.factor(diab_pred_class),
-                reference = diab_test$diabetes, positive = "pos") 
+# prediksi data train
+heart_pred_train <- predict(heart_tree, heart_train)
 
-# prediksi kelas di data train
-diab_pred_class_train <- predict(object = diabetes_tree, newdata = diab_train_down, type = "response")
+# prediksi data test
+heart_pred_test <- predict(heart_tree, heart_test)
 
-# confusion matrix data train
-confusionMatrix(data = as.factor(diab_pred_class_train),
-                reference = diab_train_down$diabetes, positive = "pos") 
+# parameter tunning
+#heart_model_new <- ctree(form= target~., data = heart_train_up, 
+#                        control = ctree_control(mincriterion = 0.7,
+#                                                minsplit = 40,
+#                                                minbucket = 20))
 
-# tuning model
-diab_model_new <- ctree(formula = diabetes~., data = diab_train_down, 
-                        control = ctree_control(mincriterion = 0.07,
-                                                minsplit = 35,
-                                                minbucket = 10))
-                        
-# prediksi `kelas` data test
-diabtest_new <- predict(object = diab_model_new, newdata = diab_test, type = "response")
+# read model
+heart_model_new <- readRDS("rds-files/heart_model_new2.RDS")
 
-# confusion matrix data test
-confusionMatrix(data = diabtest_new, reference = diab_test$diabetes, positive = "pos")
+# prediksi data train dengan heart_model_new
+pred_train_new <- predict(heart_model_new, heart_train)
 
-# prediksi `kelas` data train
-diabtrain_new <- predict(object = diab_model_new, newdata = diab_train, type = "response")
+# prediksi data test dengan heart_model_new
+pred_test_new <- predict(heart_model_new, heart_test)
 
-# confusion matrix data train
-confusionMatrix(data = diabtrain_new, reference = diab_train$diabetes, positive = "pos")
+# read model
+heart_forest <- readRDS("rds-files/heart_forest.RDS")
 
+# prediksi data train
+heart_pred_forest_train <- predict(object = heart_forest, newdata = heart_train)
+
+# prediksi data test
+heart_pred_forest_test <- predict(object = heart_forest, newdata = heart_test)
 ```
-  
-  
+
+ 
 ```{r}
-head(diab)
+head(heart)
 ```
 
 Deskripsi data:
 
-- `pregnant`: jumlah berapa kali hamil
-- `glucose`: konsentrasi glukosa plasma (glucose tolerance test)
-- `pressure`: tekanan darah diastolik (mm Hg)
-- `triceps`: ketebalan lipatan kulit trisep (mm)
-- `insulin`: insulin serum-2 jam (mu U/ml)
-- `mass`: indeks massa tubuh (berat dalam kg/(tinggi dalam m)^2)
-- `pedigree`: silsilah diabetes
-- `age`: umur (tahun)
-- `diabetes`: hasil cek diabetes
+- `age` : Usia pasien (tahun)
+- `sex`	Jenis kelamin pasien (Male=laki-laki; Female=perempuan)
+- `cp` : Jenis nyeri dada (0=typical angina; 1=atypical angina; 2=non-anginal pain; 3=asymptomatic)
+- `trestbps` : Tekanan darah (dalam mm Hg))
+- `chol` :	Kolesterol serum (dalam mg/dl)
+- `fbs` : Gula darah ketika puasa >120mg/dl (True=benar; False=salah)
+- `restecg` :	Hasil resting elektrokardiografi (0=normal; 1=ST-T abnormal; 2=hipertrofi ventrikel kiri)
+- `thalach` :	Detak jantung maksimum
+- `exang`	: Olahraga untuk induksi angina (Yes=ya; No=tidak)
+- `oldpeak` :	Depresi ST yang diakibatkan oleh latihan relative terhadap saat istirahat
+- `slope` :	Perubahan kemampuan bicara (1=naik; 2=netral; 3=menurun)
+- `ca` :	Pembuluh darah (0=normal; 1=arteri coroner; 2=aneurisma; 3=arteri perifer)
+- `thal`:	Thalassemia (1=cacat tetap; 2=normal; 3=cacat sementara)
+- `target` :	Penyakit jantung (Health=tidak terkena serangan jantung; Not Health=terkena serangan jantung)
+
 
 ### Cross-Validation
 
-Dikarenakan tipe data sudah sesuai, tidak ada missing value, dan data sudah dianggap bersih, maka langkah selanjutnya adalah melakukan split data `diab` menjadi `diab_train` dan `diab_test` dengan proporsi 80:20.
+Dikarenakan tipe data sudah sesuai, tidak ada missing value, dan data sudah dianggap bersih, maka langkah selanjutnya adalah melakukan split data `heart` menjadi `heart_train` dan `heart_test` dengan proporsi 80:20.
 
-Untuk menyamakan strata/proporsi untuk kedua target variabel pada data train dan data test ketika melakukan splitting, gunakan _function_ `initial_split()` dari _package_ `rsample`.
+```{r split_heart, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
+## melakukan splitting data train dan data test
+set.seed(250)
+# intrain <- 
+# heart_train <- 
+# heart_test <- 
 
-```{r split_diab, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
-# splitting data train dan data test
-# intrain <- initial_split(data = ..., prop = ..., strata = "...")
-# diab_train <- training(...) 
-# diab_test <- testing(...)
+# cek proporsi heart_train dan heart_test
+prop.table(table(heart_train$target))
 
+# cek proporsi heart_train dan heart_test
+prop.table(table(heart_test$target))
 ```
 
 Setelah melakukan splitting, maka seharusnya proporsi kelas di data training adalah sebagai berikut:
 
 ```{r}
-prop.table(table(diab_train$diabetes))
+prop.table(table(heart_train$target))
 ```
 
-Berdasarkan output yang dihasilkan, proporsi `diab_train` sebenarnya masih bisa dianggap balance. Namun kita bisa coba membuatnya lebih balance lagi sehingga proporsinya 50:50. Teknik yang bisa digunakan adalah:
+Sedangkan proporsi kelas di data test adalah sebagai berikut:
+
+```{r}
+prop.table(table(heart_test$target))
+```
+
+Berdasarkan output yang dihasilkan, proporsi `heart_train` dan `heart_test` sebenarnya masih bisa dianggap balance. Namun kita bisa coba membuatnya lebih balance lagi sehingga proporsinya 50:50. Teknik yang bisa digunakan adalah:
 
 - **Upsample** : menambahkan observasi minoritas hingga seimbang dengan mayoritas, dengan menduplikat data dari observasi minoritas. 
 - **Downsample** : mengurangi observasi mayoritas hingga seimbang dengan yang minoritas.  
 
-Pada kasus ini karena data yang kita miliki cukup banyak, maka kita bisa melakukan downsampling dengan menggunakan fungsi dari _library_ `caret` yaitu _function_ `downSample()`. Simpan hasil penyeimbangan kelas target pada variabel `diab_train_down`
+Pada kasus ini karena kita tidak ingin kehilangan data, maka lakukanlah upsampling dengan menggunakan fungsi dari _library_ `caret` yaitu _function_ `upSample()`. Simpan hasil penyeimbangan kelas target pada variabel `heart_train_up`
 
-```{r down_diab, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
-# diab_train_down <- downSample(x = ..., y = ..., yname = ...) 
+```{r up_heart, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
+# heart_train_up <- upSample(x = ..., y = ..., yname = ...) 
 
+
+# cek proporsi data train
+prop.table(table(heart_train_up$target))
 ```
 
-<div id="down_diab-hint">
-**Hint:** Berikut keterangan untuk parameter pada function `downSample()`:
-- x → mengambil variabel prediktor pada `diab_train` 
-- y → mengambil variabel target pada `diab_train`
-- y → nama kolom variabel target 
+<div id="up_heart-hint">
+**Hint:** Berikut keterangan untuk parameter pada function `upSample()`:
+- x → mengambil variabel prediktor pada `heart_train` 
+- y → mengambil variabel target pada `heart_train`
+- y_name → nama kolom variabel target 
 </div>
 
 ### Model Fitting
 
-Lakukan training model pada data `diab_train_down`dengan Decision Tree menggunakan argumen `ctree()`. Gunakan kolom `diabetes` sebagai variabel target dan kolom lainnya sebagai prediktor. Lalu simpan dengan nama `diabetes_tree`. 
+Lakukan training model pada data `heart_train_up` dengan Decision Tree menggunakan argumen `ctree()`. Gunakan kolom `target` sebagai variabel target dan kolom lainnya sebagai prediktor. Lalu simpan dengan nama `heart_tree`. 
 
 Kemudian tampilkan stuktur tree dengan memanggil model nya 
-```{r train_diab, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
+```{r train_heart, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
 # melakukan training model
+# heart_tree <- 
 
 # print struktur pohon
-
+plot(heart_tree, type = "simple")
 ```
 
 Berikut output yang diharapkan: 
-```{r}
-diabetes_tree
+
+
+```{r echo=FALSE, message=FALSE}
+plot(heart_tree, type = "simple")
 ```
 
 ```{r question-l, echo=FALSE}
-question("Berdasarkan struktur tree dari model, ketika ada seorang pasien dengan konsentrasi glukosa plasma (glucose) sebesar 130 dan indeks massa tubuh (mass) sebesar 33.6, maka pada kelas mana model akan mengklasifikasikan pasien tersebut?", type = "single",
+question("Berdasarkan struktur tree dari model, ketika ada seorang pasien dengan thalassemia normal (thal = 2), kondisi pembuluh darah arteri coroner (ca = 1), dan mengidap nyeri dada asymptomatic (cp = 3), maka pada kelas mana model akan mengklasifikasikan pasien tersebut?", type = "single",
 correct = "Yaps benar!", incorrect = "Jawaban Anda masih kurang tepat. Perhatikan output kembali!", allow_retry = TRUE,
 random_answer_order = FALSE,
-answer("Positif Diabetes", correct = TRUE),
-answer("Negatif Diabetes"))
+answer("Not Health", correct = TRUE),
+answer("Health"))
 ```
 
 ```{r question-m, echo=FALSE}
-question("Berdasarkan struktur tree, berapakah persentase kesalahan prediksi  yang dihasilkan model dalam mengklasifikasikan pasien dengan konsentrasi glukosa plasma (glucose) <= 114 dan pernah hamil (pregnant) <= 6?", type = "single",
+question("Berdasarkan struktur tree, berapakah persentase kesalahan prediksi yang dihasilkan model dalam mengklasifikasikan pasien dengan dengan thalassemia cacat sementara (thal = 3), mengidap nyeri dada non-anginal pain (cp =2), dan mengalami perubahan kemampuan bicara yang menaik (slope = 1)?", type = "single",
 correct = "Yaps benar!", incorrect = "Jawaban Anda masih kurang tepat. Perhatikan output kembali!", allow_retry = TRUE,
 random_answer_order = FALSE,
-answer("48,6%"),
-answer("17.4%", correct = TRUE),
-answer("35,6%"), 
-answer("24.3%"))
+answer("9,1%"),
+answer("18.2%", correct = TRUE),
+answer("25,0%"), 
+answer("15.4%"))
 ```
+
 
 ### Model Prediction
 
-Lakukan prediksi kelas dari data test dengan function `predict()`, lalu masukan ke dalam variabel `diab_pred_class`
+Lakukan prediksi kelas dari data test dengan function `predict()`, lalu masukan ke dalam variabel `heart_pred_test`. 
 
-Keterangan parameter `type`:
-
-- `type = "prob"` mengembalikan nilai peluang untuk masing-masing kelas
-- `type = "response"` mengembalikan label kelasnya (default threshold 0.5) 
-
-```{r pred_diab, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
-# splitting data train dan data test# prediksi kelas di data test
+```{r pred_heart, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
+##prediksi kelas di data test
+# heart_pred_test <- 
 
 ```
 
 ### Model Evaluation
 
-Berdasarkan hasil prediksi di data test, lakukan evaluasi model `diabetes_tree` menggunakan confusion matrix
+Berdasarkan hasil prediksi di data test, lakukan evaluasi model `heart_tree` menggunakan confusion matrix. Inisiaasi kelas positif pada kasus ini adalah `Not Health`
 
-```{r confusion_diab, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
+```{r confusion_heart, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
 # evaluasi model terhadap data test dengan Confusion Matrix
 
 ```
 
 ```{r question-n, echo=FALSE}
-question("Apabila kita tidak ingin pasien yang diabetes namun diklasifikasikan kepada kelas tidak diabetes, maka nilai apa yang ingin kita kurangi atau minimalisir?", type = "single",
+question("Apabila kita tidak ingin pasien yang terkena serangan jantung (Not Health) namun diklasifikasikan kepada kelas yang tidak terkena serangan jantung (Health), maka nilai apa yang ingin kita kurangi atau minimalisir? Dimana kelas positif pada kasus ini adalah 'Not Health'", type = "single",
 correct = "Yaps benar!", incorrect = "Jawaban Anda masih kurang tepat.", allow_retry = TRUE,
 random_answer_order = FALSE,
 answer("False Positif"),
@@ -1023,25 +1045,24 @@ answer("Specificity"),
 answer("Pos Pred Value/Precision"))
 ```
 
-Selain melihat _confusion matrix_ untuk data test, ada baiknya kita juga bandingkan dengan _performance model_ di data train  untuk mengetahui fitting dari sebuah model.
+Untuk mengetahui kondisi fitting dari suatu model, lakukan juga prediksi pada data train, lalu simpan dengan nama `heart_pred_train`. Kemudian  cek _performance model_ terhadap prediksi data train
 
-Lakukan prediksi kelas pada data train, lalu simpan dengan nama `diab_pred_class_train`
-
-```{r pred_train_diab, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
-# prediksi kelas di data train
-
+```{r pred_train_heart, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
+## prediksi kelas di data train
+# heart_pred_train <- 
 ```
 
-```{r eval_train_diab, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
+```{r eval_train_heart, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
 # confusion matrix data train
 
 ```
 
 Maka diperoleh nilai evaluasi dari model:
-- Recall di data train: 76%
-- Recall di data test: 66%
 
-Ketika dibandingkan, performa model `diabetes_tree` cenderung lebih baik pada data train dibandingkan data test. Model ini dikatakan sebagai model yang _overfitting_. Karena performa model belum cukup baik, perlu dilakukan _model tuning_.
+- Sensitivity/Recall di data train: 89%%
+- Sensitivity/Recall di data test: 72%
+
+Ketika dibandingkan, performa model `heart_tree` cenderung lebih baik pada data train dibandingkan data test. Model ini dikatakan sebagai model yang _overfitting_. Karena performa model belum cukup baik, perlu dilakukan _model tuning_.
 
 ### Bias-Variance Tradeoff
 
@@ -1076,35 +1097,35 @@ Parameter pruning:
 - minsplit: Jumlah minimal observasi di tiap cabang setelah pemisahan. Bila tidak terpenuhi, tidak dilakukan percabangan. (default: 20)
 - minbucket: Jumlah minimal observasi di terminal node. Bila tidak terpenuhi, tidak dilakukan percabangan. (default: 7)
 
-Dikarenakan model `diabetes_tree` mengalami overfitting atau pohon yang terlalu kompleks dengan parameter default, maka yang dapat dilakukan adalah meninggikan nilai untuk parameter mincriterion, minsplit dan minbucket.
+Dikarenakan model `heart_tree` mengalami overfitting atau pohon yang terlalu kompleks dengan parameter default, maka yang dapat dilakukan adalah meninggikan nilai untuk parameter mincriterion, minsplit dan minbucket.
 
-Buatlah tuning model `diabetes_tree` dengan mengatur parameter _pruning_ dengan nilai mincriterion = 0.07, minsplit = 35, dan minbucket = 10. Lalu simpan pada variabel `diab_model_new`. 
+Buatlah tuning model `heart_tree` dengan mengatur parameter _pruning_ dengan nilai mincriterion = 0.7, minsplit = 40, dan minbucket = 20. Lalu simpan pada variabel `heart_model_new`. 
 
-```{r tuning, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
-# diab_model_new <- ctree(formula = ..., data = ..., control = ctree_control())
+```{r tuning, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
+# heart_model_new <- ctree(formula = ..., data = ..., control = ctree_control())
 ```
 
 <div id="tuning-hint">
 **Hint:** Atur nilai mincriterion, minsplit, dan minbucket pada argumen `ctree_control()`
 </div>
 
-Lakukan prediksi kelas dengan model tuning pada data train dan simpan dengan nama `diabtrain_new`
+Lakukan prediksi kelas dengan model tuning pada data `heart_train` dan simpan dengan nama `heart_train_new`
 
-```{r pred_train_tuning, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
+```{r pred_train_tuning, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
 # prediksi `kelas` data train
 
 ```
 
-Lakukan prediksi kelas dengan model tuning pada data train test dan simpan dengan nama `diabtrain_new`
+Lakukan prediksi kelas dengan model tuning pada data `heart_test` dan simpan dengan nama `heart_test_new`
 
-```{r pred_test_tuning, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
+```{r pred_test_tuning, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
 # prediksi `kelas` data test
 
 ```
 
 Lakukan evaluasi pada model terhadap data train dan data test dengan confusion matrix. 
 
-```{r eval_tuning, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_diab"}
+```{r eval_tuning, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
 # confusion matrix data train
 
 # confusion matrix data test
@@ -1112,7 +1133,7 @@ Lakukan evaluasi pada model terhadap data train dan data test dengan confusion m
 ```
 
 ```{r question-p, echo=FALSE}
-question("Apabila model masih dianggap optimal jika perbedaan nilai recall dari data train dan data test tidak lebih dari 7%. Maka berdasarkan nilai toleransi tersebut, bagaimanakah kondisi model tuning yang dihasilkan? ", type = "single",
+question("Apabila model masih dianggap optimal jika perbedaan nilai recall dari data train dan data test tidak lebih dari 5%. Maka berdasarkan nilai toleransi tersebut, bagaimanakah kondisi model tuning yang dihasilkan? ", type = "single",
 correct = "Yaps benar!", incorrect = "Jawaban Anda masih kurang tepat.", allow_retry = TRUE,
 random_answer_order = FALSE,
 answer("Underfitting"),
@@ -1140,84 +1161,15 @@ Random Forest memanfaatkan konsep bernama Bagging: Bootstrap and Aggregation. Be
 3. Melakukan prediksi terhadap observasi yang baru untuk setiap Decision Tree.
 4. Aggregation: Menghasilkan satu prediksi tunggal untuk memprediksi. Pada kasus klasifikasi dengan _majority voting_, sedangkan pada kasus regresi dengan mengambil rata-rata nilai target
 
-### Study Case: Fitbit
+### Study Case: Heart Disease
 
-Kita adalah seorang analis dari perusahaan teknologi berbasis machine learning yang mengeluarkan product wearable fitness gadgets. Gadget tersebut menggunakan machine learning untuk secara otomatis mengingatkan penggunanya apabila suatu excercise belum dilakukan secara optimal.
+Pada pembelajaran metode klasifikasi dengan Random Forest, kita akan menggunakan dataset **Heart Disease** seperti yang kita gunakan pada topik Decision Tree. Namun kasusnya kali ini, kita tidak ingin melakukan interpretasi pada model, melainkan hanya ingin menghasilkan model yang _robust_ dalam melakukan prediksi terhadap pasien mengidap penyakit jantung atau tidak. Kemudian kita ingin mencari tahu variabel prediktor apa yang paling memengaruhi hasil prediksi tersebut. Untuk itu kita bisa menggunakan teknik Random Forest dalam menjawab kasus tersebut.
 
-Kita diberikan data rekaman gadgets tersebut beserta label status excercise `classe` sebagai berikut:
-
-- Kelas 1: Tepat sesuai spesifikasi
-- Kelas 2: Melempar siku ke depan
-- Kelas 3: Mengangkat halter hanya setengah jalan
-- Kelas 4: Menurunkan dumbbell hanya setengah jalan
-- Kelas 5: Melempar pinggul ke depan
-
-*Bussiness Questions:* Buat model Random Forest yang dapat mengklasifikasikan kelima status tersebut dengan baik.
-
-### Read Data
-
-Pembacaan data dilakukan, kemudian disimpan dengan variabel `fb_raw`
-
-```{r data_fb, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
-# chunk untuk menyimpan semua variabel yang digunakan pada party
-# baca data
-# setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
-fb_raw <- read.csv("data_input/fitbit.csv", stringsAsFactors = F)
-fb_raw <- fb_raw %>% 
-  mutate_at(.vars = c("classe", "user_name", "new_window"), .funs = as.factor)
-fb_raw %>% select(is.factor)
-
-# feature selection menggunakan nearzerovar
-no_var <- nearZeroVar(fb_raw)
-fb <- fb_raw[, -no_var]
-
-# splitting data
-RNGkind(sample.kind = "Rounding")
-set.seed(100)
-intrain <- sample(x = nrow(fb), size = nrow(fb)*0.8) 
-fb_train <- fb[intrain,] 
-fb_test <- fb[-intrain,] 
-
-# read model
-fb_forest <- readRDS("fb_forest.RDS")
-
-# prediksi terhadap data test
-fb_pred <- predict(object = fb_forest, newdata = fb_test)
-
-
-```
-  
-  
-```{r}
-head(fb_raw)
-```
-
-### Data Pre-processing
-
-Kekurangan random forest adalah beban komputasinya yang amat besar dan lama. Hal ini dapat dikurangi dengan menyeleksi prediktor sehingga tidak terlalu banyak. 
-
-Lakukan seleksi fitur dengan menghapus kolom yang memiliki variansi mendekati nol (kurang informatif). Gunakan _function_ `nearZeroVar()` dari package `caret` untuk mendapatkan kolom yang akan dihapus.
-
-```{r zero_fb, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_fb"}
-# mengambil kolom yang kurang informatif menggunakan nearzerovar
-no_var <-
-# membuang kolom no_var
-fb <- fb_raw[, -no_var]
-
-```
-
-### Cross Validation
-
-Lakukan splitting train test dengan proporsi 80%:20%. Simpan dengan nama `fb_train` dan `fb_test`
-```{r split_fb, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_fb"}
-# splitting data train dan data test
-
-
-```
+Untuk proses pembacaan data, cross validasi, dan upsampling silakan merujuk pada topik Decision Tree. Kita akan melanjutkan dari proses Model Fitting. 
 
 ### Model Fitting
 
-Kali ini kita akan membuat model random forest dengan mengunakan teknik k-fold cross validation. K-fold cross validation adalah metode cross validation dimana data akan dibagi menjadi $k$ bagian sama banyak. Setiap bagian akan digunakan menjadi data test secara bergantian. Berbeda dengan metode cross validation biasa hanya membagi datanya menjadi `data_train` dan `data_test` secara tetap. Metode ini memberlakukan seluruh data pernah menjadi data train dan data test. Tujuannya supaya bisa mengetahui skema splitting mana yang terbaik. 
+Kali ini kita akan membuat model random forest dengan mengunakan teknik k-fold cross validation. K-fold cross validation adalah metode cross validation dimana data akan dibagi menjadi $k$ bagian sama banyak. Metode ini memberlakukan seluruh data pernah menjadi data train dan data test. Tujuannya supaya bisa mengetahui skema splitting mana yang terbaik. 
 
 Definisikan k-fold cross validation dengan nama variabel `control`, dengan k=5 dan pembuatan set k-fold tersebut dilakukan 3 kali. Gunakan argumen `trainControl` dengan keterangan sebagai berikut:
 
@@ -1225,9 +1177,10 @@ Definisikan k-fold cross validation dengan nama variabel `control`, dengan k=5 d
 - `number`: nilai k dalam k-fold CV
 - `repeats`: pengulangan dalam melakukan k-fold CV
 
-```{r fold_fb, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_fb"}
+```{r fold_heart, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
 # definisikan k-fold validation
-
+set.seed(417)
+# control <- 
 
 ```
 
@@ -1235,27 +1188,32 @@ Kemudian dilakukan pembuatan model random forest dengan _code_ berikut.
 
 ```{r eval=FALSE}
 # pembuatan model random forest
-fb_forest <- train(formula = classe~., data = fb_train, method = "rf",
-                   trainControl = control)
+heart_forest <- train(form = target~., data = heart_train_up, method = "rf",                  
+                trainControl = control)
 ```
+
 Tampilkan summary model dengan memanggil model yang sudah dibuat sebelumnya:
-```{r}
+```{r echo=FALSE, message=FALSE}
+
+# read model
+heart_forest <- readRDS("rds-files/heart_forest.RDS")
+
 # summary model
-fb_forest
+heart_forest
 ```
 
 ```{r question-q, echo=FALSE}
-question("Berdasarkan output summary model random forest, berapakah jumlah prediktor yang digunakan untuk splitting node pada final model", type = "single",
+question("Berdasarkan output summary model random forest, berapa kalikah prediktor digunakan untuk splitting node pada final model?", type = "single",
 correct = "Yaps benar!", incorrect = "Jawaban Anda masih kurang tepat.", allow_retry = TRUE,
 random_answer_order = FALSE,
 answer("2"),
-answer("31", correct = TRUE),
-answer("60"))
+answer("174", correct = TRUE),
+answer("347"))
 ```
 
-Selnajutnya kita bisa melihat summary final model dengan menjalankan chunk berikut:
+Selanjutnya kita bisa melihat summary final model dengan menjalankan chunk berikut:
 ```{r}
-fb_forest$finalModel
+heart_forest$finalModel
 ```
 
 Berdasarkan summary model, kita dapat mengetahui nilai out-of-bag error (OOB) yang dapat dilihat pada keterangan `OOB estimate of  error rate`. Nilai OOB adalah nilai error yg diterima oleh model terhadap _out of bag sample_  (_unseen data_ saat melakukan bootstrap sampling). Dengan mengetahui nilai OOB, maka dapat dihitung nilai akurasi dengan formula berikut:
@@ -1265,8 +1223,8 @@ $$Accuracy  = 100 - OOB $$
 question("Berdasarkan output summary model final, berapakah nilai akurasi yang dihasilkan pada pada data test (out of bag sample)?", type = "single",
 correct = "Yaps benar!", incorrect = "Jawaban Anda masih kurang tepat.", allow_retry = TRUE,
 random_answer_order = FALSE,
-answer("0.08%"),
-answer("99.92%", correct = TRUE),
+answer("18.18%"),
+answer("81.82%", correct = TRUE),
 answer("99.99%"))
 ```
 
@@ -1275,34 +1233,36 @@ answer("99.99%"))
 Random forest adalah model yang tidak dapat diinterpretasikan, namun kita bisa melihat prediktor apa saja yang paling digunakan (penting) dalam pembuatan random forest
 
 ```{r}
-varImp(fb_forest)
+varImp(heart_forest)
 ```
 
 ```{r question-s, echo=FALSE}
 question("Dari output yang terbentuk, variabel mana yang memiliki andil paling tinggi dalam menghasilkan prediksi?", type = "single",
 correct = "Yaps benar!", incorrect = "Jawaban Anda masih kurang tepat.", allow_retry = TRUE,
 random_answer_order = FALSE,
-answer("raw_timestamp_part_1",correct = TRUE),
-answer("num_window"),
-answer("roll_belt"),
-answer("accel_dumbbell_y"))
+answer("Kondisi Thalassemia (thal)",correct = TRUE),
+answer("Kondisi Kolesterol serum (chol)"),
+answer("Jenis kelamin pasien (sex)"),
+answer("Kondisi Pembuluh darah (ca)"))
 ```
 
-### Prediction 
+### Prediction & Model Evaluation
 
-Lakukan prediksi model `rb_forest` terhadap `fb_test`. Simpan dengan nama variable `fb_pred`
+Lakukan prediksi model `heart_forest` terhadap `heart_train`. Simpan dengan nama variable `heart_pred_forest_train`. Lalu evaluasi model terhadap data train dengan confusion matrix
 
-```{r pred_fb, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_fb"}
+```{r pred_forest_train, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
+# prediksi terhadap data train
+
+# evaluasi model terhadap data train
+
+```
+
+Kemudian lakukan prediksi model `heart_forest` terhadap `heart_test`. Simpan dengan nama variable `heart_pred_forest_test`. Lakukan juga evaluasi model terhadap data test dengan confusion matrix
+
+```{r pred_forest_test, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_heart"}
 # prediksi terhadap data test
 
-```
-
-### Model Evaluation
-
-Evaluasi model `fb_pred`dengan menggunakan Confusion Matrix. Gunakan kelas positif = 1 
-
-```{r eval_fb, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "data_fb"}
-# evaluasi model dengan Confusion Matrix
+# evaluasi model terhadap data test
 
 ```
 
@@ -1314,6 +1274,8 @@ answer("Underfitting"),
 answer("Overfitting"),
 answer("Just Right", correct = TRUE))
 ```
+
+Berdasarkan hasil evaluasi model `heart_forest`, model telah berhasil melakukan prediksi dengan baik terhadap data train dan data test, dengan nilai Recall pada data test mencapai 96%. Kemudian kita juga mampu mengetahui variabel-variabel mana saja yang dianggap penting dalam melakukan prediksi.
 
 #### Don't stop learning!
 See yaa :)
