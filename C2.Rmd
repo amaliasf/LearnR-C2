@@ -28,7 +28,6 @@ library(randomForest) # random forest model
 ```
 
 
-
 ## Bab 1 : Naive Bayes
 
 Halo _Future Data Scientist!_ Pada _course_ ini kita akan belajar lebih lanjut mengenai metode klasifikasi. Kalau pada _course_ sebelumnya yaitu _Classification 1_ kita sudah mengenal 2 algoritma klasifikasi yang sangat popular yaitu _Logistic Regression_ dan _K-Nearest Neighbor_, kali ini kita diberi kesempatan untuk belajar beberapa algoritma lain yang lebih _advance_ lagi. Namun tidak perlu khawatir, karena secara workflow sama saja seperti pada _Classification 1_, hanya metode saja yang berbeda. Algoritma pertama yang akan kita pelajari adalah _Naive Bayes_. 
@@ -82,28 +81,8 @@ Pembacaan data dilakukan, kemudian disimpan dengan variabel `party`
 ```{r party, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # chunk untuk menyimpan semua variabel yang digunakan pada party
 # baca data
-# setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
-party <- read.csv("data_input/votes.txt", header = F, stringsAsFactors = T)
-
-# mengubah nama kolom
-names(party) <- c("party",
-                  "hcapped_infants",
-                  "watercost_sharing",
-                  "adoption_budget_reso",
-                  "physfee_freeze",
-                  "elsalvador_aid",
-                  "religious_grps",
-                  "antisatellite_ban",
-                  "nicaraguan_contras",
-                  "mxmissile",
-                  "immigration",
-                  "synfuels_cutback",
-                  "education_funding",
-                  "superfundright_sue",
-                  "crime",
-                  "dutyfree_exps",
-                  "expadmin_southafr"
-                  )
+# setwd("D:/ALGORITMA/DST/DSS Project #2/LearnR-C2")
+party <- readRDS("data_input/votes.RDS")
 
 # splitting data
 RNGkind(sample.kind = "Rounding")
@@ -353,17 +332,9 @@ Pembacaan data dilakukan, kemudian disimpan dengan variabel `sms_raw`
 ```{r sms, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # chunk untuk menyimpan semua variabel yang digunakan pada sms_raw
 # baca data
-# setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
-sms_raw <- read.csv("data_input/spam.csv",
-                    stringsAsFactors = FALSE,
-                    encoding = "UTF-8")
-# wrangling
-#sms <- sms_raw %>% 
-#  mutate(v1 = as.factor(v1)) %>% 
-#  select(- c(X , X.1 , X.2)) %>% 
-#  rename(label = v1, text = v2) 
+# setwd("D:/ALGORITMA/DST/DSS Project #2/LearnR-C2")
 
-sms <- readRDS("rds-files/sms.RDS")
+sms <- readRDS("data_input/sms.RDS")
 
 # ubah format menjadi corpus
 sms_corpus <- VCorpus(VectorSource(sms$text))
@@ -396,17 +367,8 @@ sms_dtm <- DocumentTermMatrix(sms_corpus_clean)
 
 ```{r sms-2, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # read doc term matrix
-# setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
-sms_raw <- read.csv("data_input/spam.csv",
-                    stringsAsFactors = FALSE,
-                    encoding = "UTF-8")
-# wrangling
-#sms <- sms_raw %>% 
-#  mutate(v1 = as.factor(v1)) %>% 
-#  select(- c(X , X.1 , X.2)) %>% 
-#  rename(label = v1, text = v2) 
-
-sms <- readRDS("rds-files/sms.RDS")
+# setwd("D:/ALGORITMA/DST/DSS Project #2/LearnR-C2")
+sms <- readRDS("data_input/sms.RDS")
 
 sms_dtm <- readRDS("rds-files/sms_dtm.RDS")
 
@@ -450,12 +412,9 @@ model_spam <- naiveBayes(x = sms_train_bn, # variabel prediktor
 ```{r sms-3, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # read required files
 
-# setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
-sms_raw <- read.csv("data_input/spam.csv",
-                    stringsAsFactors = FALSE,
-                    encoding = "UTF-8")
+# setwd("D:/ALGORITMA/DST/DSS Project #2/LearnR-C2")
+sms <- readRDS("data_input/sms.RDS")
 
-sms <- readRDS("rds-files/sms.RDS")
 model_spam <- readRDS("rds-files/model_spam.RDS")
 sms_test_bn <- readRDS("rds-files/sms_test_bn.RDS")
 label_test <- readRDS("rds-files/label_test.RDS")
@@ -482,52 +441,13 @@ sms_value <- performance(prediction.obj = sms_roc, measure = "auc")
 ```
 
 ```{r}
-head(sms_raw)
+head(sms)
 ```
 
 Deskripsi data :
 
- - `v1`: status SMS (spam/ham)
- - `v2`: teks SMS 
-
-### Data Wrangling
-
-Berdasarkan inspeksi data, lakukan beberapa langkah berikut untuk merapikan data mentah sehingga dapat dibaca dengan mudah. 
-
-1. Ubah kolom `v1` menjadi bentuk factor
-2. Hapus 3 kolom terakhir yang tidak memiliki nilai dan informasi
-2. Gantilah nama kolom pertama `v1` menjadi `label` dan kolom kedua`v2` menjadi `text`
-
-Simpan dataframe yang sudah dirapikan dengan nama `sms`.
-
-```{r wrangling, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "sms"}
-# data wrangling
-
-
-head(sms)  
-```
-
-<div id="wrangling-hint">
-**Hint:** Solusi code yang bisa digunakan:
-
-```{r eval=FALSE}
-sms <- sms_raw %>% 
-  mutate(v1 = ...) %>% # gunakan function as.factor() untuk mengubah v1
-  select(- c( ..... )) %>% # isi dengan nama kolom yang ingin dihapus
-  rename(label = ..., text = ...) #rename kolom sesuai instruksi
-```
-</div>
-
-Hasil akhir dari format tabel yang diharapkan adalah sebagai berikut:
-
-```{r echo=FALSE}
-sms <- sms_raw %>% 
-  mutate(v1 = as.factor(v1)) %>% 
-  select(- c(X , X.1 , X.2)) %>% 
-  rename(label = v1, text = v2) 
-head(sms)
-```
-
+ - `label`: status SMS (spam/ham)
+ - `text`: teks SMS 
 
 ### Exploratory Data Analysis (EDA)
 
@@ -837,16 +757,8 @@ Pembacaan data dilakukan, kemudian disimpan dengan variabel `heart`
 ```{r data_heart, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # chunk untuk menyimpan semua variabel yang digunakan pada party
 # baca data
-# setwd("D:/ALGORITMA/DSS Project #2/LearnR-C2")
-heart<-read.csv("data_input/heart.csv")
-
-heart <- heart %>% 
-  mutate_if(is.integer, as.factor) %>% 
-  mutate(sex = factor(sex, levels = c(0,1), labels = c("Female","Male")),
-         fbs =factor(fbs, levels = c(0,1), labels = c("False","True")),
-         exang = factor(exang, levels = c(0,1), labels = c("No","Yes")),
-         target = factor(target, levels = c(0,1), 
-                        labels = c("Health","Not Health")))
+# setwd("D:/ALGORITMA/DST/DSS Project #2/LearnR-C2")
+heart<-readRDS("data_input/heart.RDS")
 
 # splitting train dan test
 set.seed(250)
